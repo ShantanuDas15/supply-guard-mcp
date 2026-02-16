@@ -1,8 +1,10 @@
-from fastmcp import FastMCP, Context
+from fastmcp import FastMCP, Context, Image
 import joblib
 import httpx
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import io
 
 # Initialize the FastMCP server
 # REMOVED: dependencies=["scikit-learn", "pandas", "joblib", "httpx"]
@@ -79,7 +81,7 @@ def predict_package_risk(package_name: str, author_age_days: int, num_versions: 
     }])
     
     # 3. Inference
-    prediction = model.predict(features)[0] # 1 = Malicious, 0 = Safe
+    prediction = model.predict(features)[0]
     probs = model.predict_proba(features)[0] # [prob_safe, prob_malicious]
     risk_score = probs[1]
     
@@ -90,6 +92,45 @@ def predict_package_risk(package_name: str, author_age_days: int, num_versions: 
         return f"SUSPICIOUS (Score: {risk_score:.2f}): Review code manually."
     else:
         return f"PASS (Score: {risk_score:.2f}): Model classifies as benign."
+
+# --- TOOL 3: Visualization (Gauge) ---
+@mcp.tool()
+def visualize_risk_score(risk_score: float) -> Image:
+    """
+    Generates a visual Gauge Chart (speedometer style) for the risk score.
+    Call this when the user asks to 'see' the risk or wants a report.
+    Args:
+        risk_score: A float between 0.0 (Safe) and 1.0 (Malicious).
+    """
+    # 1. Setup the plot
+    fig, ax = plt.subplots(figsize=(6, 3))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis('off') # Hide axes
+    
+    # 2. Draw the "Risk Bar" (Green to Red gradient)
+    # We cheat a bit for a simple visual: A colored rectangle bar
+    gradient = np.linspace(0, 1, 256)
+    gradient = np.vstack((gradient, gradient))
+    ax.imshow(gradient, aspect='auto', cmap='RdYlGn_r', extent=[0, 1, 0, 0.3])
+    
+    # 3. Draw the Marker (The "Needle")
+    ax.plot([risk_score, risk_score], [0, 0.4], color='black', linewidth=3, marker='v', markersize=10)
+    
+    # 4. Add Text Labels
+    ax.text(0.0, -0.1, "SAFE", fontsize=12, color='green', ha='center')
+    ax.text(0.5, -0.1, "SUSPICIOUS", fontsize=12, color='orange', ha='center')
+    ax.text(1.0, -0.1, "MALICIOUS", fontsize=12, color='red', ha='center')
+    ax.set_title(f"Forensic Risk Assessment: {risk_score:.2f}", fontsize=14, weight='bold')
+
+    # 5. Save to Buffer (In-memory image)
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    plt.close(fig)
+    buf.seek(0)
+    
+    # 6. Return as FastMCP Image
+    return Image(data=buf.read(), format="png")
 
 # --- RESOURCE: Policy Documents ---
 @mcp.resource("guidelines://security_policy")
