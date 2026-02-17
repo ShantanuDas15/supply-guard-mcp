@@ -53,81 +53,126 @@ def check_known_vulnerabilities(package_name: str, ecosystem: str = "PyPI") -> s
 
 # --- VISUALIZATION HELPERS ---
 def create_risk_gauge(risk_score, filename="/tmp/risk_gauge.png"):
-    """Creates a gauge/speedometer chart for risk score."""
-    fig, ax = plt.subplots(figsize=(8, 5), subplot_kw=dict(aspect="equal"))
+    """Creates a gauge/speedometer chart for risk score with gradient colors."""
+    fig, ax = plt.subplots(figsize=(10, 6), subplot_kw=dict(aspect="equal"))
+    fig.patch.set_facecolor('#f8f9fa')
     
-    # Risk zones
-    colors = ['#2ecc71', '#f39c12', '#e74c3c']
-    zones = [0.33, 0.67, 1.0]
-    labels = ['LOW\nRISK', 'MEDIUM\nRISK', 'HIGH\nRISK']
+    # Enhanced gradient colors - vibrant and professional
+    colors = ['#00d2ff', '#3a7bd5', '#f093fb', '#f5576c', '#fa0f00']
     
-    # Create gauge
-    wedges, texts = ax.pie([0.33, 0.34, 0.33], 
-                            colors=colors,
+    # Create gradient gauge with more segments for smooth transition
+    segments = 50
+    wedge_values = [1/segments] * segments
+    wedge_colors = []
+    
+    for i in range(segments):
+        progress = i / segments
+        if progress < 0.33:
+            # Green to yellow gradient
+            ratio = progress / 0.33
+            wedge_colors.append(plt.cm.RdYlGn_r(0.1 + ratio * 0.2))
+        elif progress < 0.67:
+            # Yellow to orange gradient
+            ratio = (progress - 0.33) / 0.34
+            wedge_colors.append(plt.cm.RdYlGn_r(0.3 + ratio * 0.3))
+        else:
+            # Orange to red gradient
+            ratio = (progress - 0.67) / 0.33
+            wedge_colors.append(plt.cm.RdYlGn_r(0.6 + ratio * 0.4))
+    
+    wedges, texts = ax.pie(wedge_values, 
+                            colors=wedge_colors,
                             startangle=180,
                             counterclock=False,
-                            wedgeprops=dict(width=0.3))
+                            wedgeprops=dict(width=0.35, edgecolor='white', linewidth=1))
     
-    # Add needle
+    # Enhanced metallic needle with shadow
     angle = 180 - (risk_score * 180)
-    needle_length = 0.7
+    needle_length = 0.75
+    
+    # Shadow
+    ax.arrow(0.02, -0.02, 
+             needle_length * 0.95 * np.cos(np.radians(angle)),
+             needle_length * 0.95 * np.sin(np.radians(angle)),
+             width=0.025, head_width=0.09, head_length=0.12,
+             fc='gray', ec='gray', alpha=0.3, zorder=9)
+    
+    # Main needle with gradient effect
     ax.arrow(0, 0, 
              needle_length * np.cos(np.radians(angle)),
              needle_length * np.sin(np.radians(angle)),
-             width=0.02, head_width=0.08, head_length=0.1,
-             fc='black', ec='black', zorder=10)
+             width=0.025, head_width=0.1, head_length=0.12,
+             fc='#2c3e50', ec='#1a252f', linewidth=2, zorder=10)
     
-    # Center circle
-    circle = plt.Circle((0, 0), 0.4, color='white', zorder=5)
-    ax.add_patch(circle)
+    # Center circle with gradient effect
+    for radius, alpha in zip([0.42, 0.38, 0.34], [0.3, 0.5, 1.0]):
+        circle = plt.Circle((0, 0), radius, color='white', zorder=5, alpha=alpha)
+        ax.add_patch(circle)
     
-    # Score text
+    inner_circle = plt.Circle((0, 0), 0.3, color='#34495e', zorder=6)
+    ax.add_patch(inner_circle)
+    
+    # Enhanced score text with shadow effect
+    ax.text(0.02, -0.08, f'{risk_score:.2f}', 
+            ha='center', va='center', fontsize=42, fontweight='bold', 
+            color='gray', alpha=0.3, zorder=14)
     ax.text(0, -0.1, f'{risk_score:.2f}', 
-            ha='center', va='center', fontsize=32, fontweight='bold', zorder=15)
-    ax.text(0, -0.35, 'RISK SCORE', 
-            ha='center', va='center', fontsize=12, color='gray', zorder=15)
+            ha='center', va='center', fontsize=42, fontweight='bold', 
+            color='white', zorder=15)
+    ax.text(0, -0.22, 'RISK SCORE', 
+            ha='center', va='center', fontsize=11, color='#ecf0f1', 
+            fontweight='bold', zorder=15, style='italic')
     
-    # Zone labels
-    for i, (angle_pos, label) in enumerate(zip([150, 90, 30], labels)):
-        ax.text(0.9 * np.cos(np.radians(angle_pos)),
-                0.9 * np.sin(np.radians(angle_pos)),
-                label, ha='center', va='center', fontsize=10, fontweight='bold')
+    # Enhanced zone labels with background
+    zone_data = [(150, 'LOW\nRISK', '#27ae60'), (90, 'MEDIUM\nRISK', '#f39c12'), (30, 'HIGH\nRISK', '#e74c3c')]
+    for angle_pos, label, color in zone_data:
+        x = 0.95 * np.cos(np.radians(angle_pos))
+        y = 0.95 * np.sin(np.radians(angle_pos))
+        ax.text(x, y, label, ha='center', va='center', fontsize=11, 
+                fontweight='bold', color=color,
+                bbox=dict(boxstyle='round,pad=0.5', facecolor='white', 
+                         edgecolor=color, linewidth=2, alpha=0.9), zorder=20)
     
-    ax.set_xlim(-1.2, 1.2)
-    ax.set_ylim(-0.3, 1.2)
+    ax.set_xlim(-1.3, 1.3)
+    ax.set_ylim(-0.4, 1.3)
     ax.axis('off')
     
-    plt.title('Package Risk Assessment', fontsize=16, fontweight='bold', pad=20)
+    plt.title('📊 PACKAGE RISK ASSESSMENT GAUGE', fontsize=18, fontweight='bold', 
+             pad=25, color='#2c3e50', family='sans-serif')
     plt.tight_layout()
-    plt.savefig(filename, dpi=150, bbox_inches='tight', facecolor='white')
+    plt.savefig(filename, dpi=200, bbox_inches='tight', facecolor='#f8f9fa')
     plt.close()
     return filename
 
 def create_feature_analysis(author_age, num_versions, name_entropy, filename="/tmp/feature_analysis.png"):
     """Creates a bar chart comparing features with safe thresholds."""
-    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig.patch.set_facecolor('#f8f9fa')
     
     features = [
         {
-            'name': 'Author Age',
+            'name': '👤 Author Age',
             'value': author_age,
             'safe_threshold': 30,
             'unit': 'days',
-            'higher_is_better': True
+            'higher_is_better': True,
+            'icon': '📅'
         },
         {
-            'name': 'Version Count',
+            'name': '🔢 Version Count',
             'value': num_versions,
             'safe_threshold': 3,
             'unit': 'versions',
-            'higher_is_better': True
+            'higher_is_better': True,
+            'icon': '📦'
         },
         {
-            'name': 'Name Entropy',
+            'name': '🔤 Name Entropy',
             'value': name_entropy,
             'safe_threshold': 3.0,
             'unit': 'bits',
-            'higher_is_better': False
+            'higher_is_better': False,
+            'icon': '🎲'
         }
     ]
     
@@ -138,36 +183,63 @@ def create_feature_analysis(author_age, num_versions, name_entropy, filename="/t
         # Determine if value is safe
         if feat['higher_is_better']:
             is_safe = value >= threshold
-            color = '#2ecc71' if is_safe else '#e74c3c'
+            actual_color = ['#2ecc71', '#27ae60'] if is_safe else ['#e74c3c', '#c0392b']
         else:
             is_safe = value <= threshold
-            color = '#2ecc71' if is_safe else '#e74c3c'
+            actual_color = ['#2ecc71', '#27ae60'] if is_safe else ['#e74c3c', '#c0392b']
         
-        # Bar chart
-        bars = ax.barh(['Actual', 'Safe\nThreshold'], [value, threshold], 
-                       color=[color, '#95a5a6'])
+        threshold_color = ['#3498db', '#2980b9']
         
-        # Value labels
-        for bar in bars:
+        # Create gradient bars
+        bars = ax.barh(['Actual\nValue', 'Safe\nThreshold'], [value, threshold], 
+                       color=[actual_color[0], threshold_color[0]],
+                       edgecolor=[actual_color[1], threshold_color[1]],
+                       linewidth=3, height=0.6, alpha=0.85)
+        
+        # Add gradient effect with overlapping bars
+        for bar, colors in zip(bars, [actual_color, threshold_color]):
+            bar.set_hatch('///' if bar.get_width() == threshold else None)
+        
+        # Enhanced value labels with background
+        for bar, label_text in zip(bars, [f'{value:.1f}', f'{threshold:.1f}']):
             width = bar.get_width()
-            ax.text(width, bar.get_y() + bar.get_height()/2, 
-                   f'{width:.1f}',
-                   ha='left', va='center', fontweight='bold', fontsize=10)
+            ax.text(width + max(value, threshold) * 0.05, 
+                   bar.get_y() + bar.get_height()/2, 
+                   label_text,
+                   ha='left', va='center', fontweight='bold', fontsize=13,
+                   bbox=dict(boxstyle='round,pad=0.4', facecolor='white', 
+                            edgecolor='gray', linewidth=1.5, alpha=0.9))
         
-        ax.set_xlabel(feat['unit'], fontsize=9)
-        ax.set_title(feat['name'], fontsize=11, fontweight='bold')
+        ax.set_xlabel(feat['unit'].upper(), fontsize=11, fontweight='bold', color='#34495e')
+        ax.set_title(feat['name'], fontsize=13, fontweight='bold', pad=15, color='#2c3e50')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_linewidth(2)
+        ax.spines['bottom'].set_linewidth(2)
+        ax.spines['left'].set_color('#bdc3c7')
+        ax.spines['bottom'].set_color('#bdc3c7')
+        ax.set_facecolor('#ecf0f1')
+        ax.grid(axis='x', alpha=0.3, linestyle='--', linewidth=1)
         
-        # Add status icon
-        icon = '✓' if is_safe else '✗'
-        icon_color = '#2ecc71' if is_safe else '#e74c3c'
-        ax.text(0.95, 0.95, icon, transform=ax.transAxes,
-               fontsize=20, ha='right', va='top', color=icon_color, fontweight='bold')
+        # Enhanced status badge
+        if is_safe:
+            badge_text = '✓ SAFE'
+            badge_color = '#27ae60'
+            badge_bg = '#d5f4e6'
+        else:
+            badge_text = '✗ RISK'
+            badge_color = '#e74c3c'
+            badge_bg = '#fadbd8'
+        
+        ax.text(0.5, 0.98, badge_text, transform=ax.transAxes,
+               fontsize=14, ha='center', va='top', color=badge_color, fontweight='bold',
+               bbox=dict(boxstyle='round,pad=0.6', facecolor=badge_bg, 
+                        edgecolor=badge_color, linewidth=2.5, alpha=0.95))
     
-    plt.suptitle('Feature Safety Analysis', fontsize=14, fontweight='bold', y=1.02)
-    plt.tight_layout()
-    plt.savefig(filename, dpi=150, bbox_inches='tight', facecolor='white')
+    plt.suptitle('🔍 FEATURE SAFETY ANALYSIS', fontsize=16, fontweight='bold', 
+                y=0.98, color='#2c3e50')
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(filename, dpi=200, bbox_inches='tight', facecolor='#f8f9fa')
     plt.close()
     return filename
 
@@ -178,39 +250,73 @@ def create_model_insights(model, filename="/tmp/model_insights.png"):
     
     try:
         importances = model.feature_importances_
-        feature_names = ['Author Age', 'Version Count', 'Name Entropy']
+        feature_names = ['👤 Author Age', '🔢 Version Count', '🔤 Name Entropy']
         
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+        fig.patch.set_facecolor('#f8f9fa')
         
-        # Feature Importance Bar Chart
+        # Feature Importance Bar Chart with gradient
         indices = np.argsort(importances)[::-1]
-        colors_map = ['#3498db', '#9b59b6', '#e67e22']
+        colors_map = ['#e74c3c', '#3498db', '#f39c12']
+        edge_colors = ['#c0392b', '#2980b9', '#e67e22']
         
         bars = ax1.bar(range(len(importances)), importances[indices], 
-                      color=[colors_map[i] for i in indices])
-        ax1.set_xlabel('Features', fontsize=10, fontweight='bold')
-        ax1.set_ylabel('Importance Score', fontsize=10, fontweight='bold')
-        ax1.set_title('Feature Importance in Risk Prediction', fontsize=12, fontweight='bold')
+                      color=[colors_map[i] for i in indices],
+                      edgecolor=[edge_colors[i] for i in indices],
+                      linewidth=3, alpha=0.85)
+        
+        # Add gradient effect with hatching
+        for i, bar in enumerate(bars):
+            bar.set_hatch('///')
+        
+        ax1.set_xlabel('Features →', fontsize=12, fontweight='bold', color='#2c3e50')
+        ax1.set_ylabel('Importance Score →', fontsize=12, fontweight='bold', color='#2c3e50')
+        ax1.set_title('🎯 Feature Importance in Risk Prediction', fontsize=14, fontweight='bold', 
+                     pad=15, color='#2c3e50')
         ax1.set_xticks(range(len(importances)))
-        ax1.set_xticklabels([feature_names[i] for i in indices], rotation=0)
+        ax1.set_xticklabels([feature_names[i] for i in indices], rotation=0, 
+                           fontsize=11, fontweight='bold')
         ax1.spines['top'].set_visible(False)
         ax1.spines['right'].set_visible(False)
+        ax1.spines['left'].set_linewidth(2)
+        ax1.spines['bottom'].set_linewidth(2)
+        ax1.spines['left'].set_color('#7f8c8d')
+        ax1.spines['bottom'].set_color('#7f8c8d')
+        ax1.set_facecolor('#ecf0f1')
+        ax1.grid(axis='y', alpha=0.3, linestyle='--', linewidth=1)
         
-        # Add value labels on bars
+        # Enhanced value labels with background
         for bar in bars:
             height = bar.get_height()
-            ax1.text(bar.get_x() + bar.get_width()/2., height,
+            ax1.text(bar.get_x() + bar.get_width()/2., height + 0.01,
                     f'{height:.3f}',
-                    ha='center', va='bottom', fontsize=9, fontweight='bold')
+                    ha='center', va='bottom', fontsize=11, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.4', facecolor='white', 
+                             edgecolor='#34495e', linewidth=1.5, alpha=0.9))
         
-        # Pie chart
-        ax2.pie(importances, labels=feature_names, autopct='%1.1f%%',
-               colors=colors_map, startangle=90,
-               textprops={'fontsize': 10, 'fontweight': 'bold'})
-        ax2.set_title('Feature Contribution Distribution', fontsize=12, fontweight='bold')
+        # Enhanced pie chart with explosion
+        explode = [0.1 if i == np.argmax(importances) else 0.05 for i in range(len(importances))]
+        wedges, texts, autotexts = ax2.pie(importances, 
+                                           labels=[name.replace('👤 ', '').replace('🔢 ', '').replace('🔤 ', '') 
+                                                  for name in feature_names], 
+                                           autopct='%1.1f%%',
+                                           colors=colors_map, 
+                                           startangle=90,
+                                           explode=explode,
+                                           textprops={'fontsize': 11, 'fontweight': 'bold'},
+                                           wedgeprops=dict(edgecolor='white', linewidth=3, alpha=0.85))
+        
+        # Enhance autotext (percentages)
+        for autotext in autotexts:
+            autotext.set_color('white')
+            autotext.set_fontsize(12)
+            autotext.set_fontweight('bold')
+        
+        ax2.set_title('📊 Feature Contribution Distribution', fontsize=14, fontweight='bold', 
+                     pad=15, color='#2c3e50')
         
         plt.tight_layout()
-        plt.savefig(filename, dpi=150, bbox_inches='tight', facecolor='white')
+        plt.savefig(filename, dpi=200, bbox_inches='tight', facecolor='#f8f9fa')
         plt.close()
         return filename
     except Exception as e:
@@ -219,94 +325,166 @@ def create_model_insights(model, filename="/tmp/model_insights.png"):
 
 def create_risk_distribution(risk_score, filename="/tmp/risk_distribution.png"):
     """Creates a distribution chart showing where this package falls."""
-    fig, ax = plt.subplots(figsize=(10, 4))
+    fig, ax = plt.subplots(figsize=(13, 6))
+    fig.patch.set_facecolor('#f8f9fa')
+    ax.set_facecolor('#ecf0f1')
     
     # Simulated distribution of packages (normal distribution centered at low risk)
-    x = np.linspace(0, 1, 200)
-    # Most packages are safe (left-skewed distribution)
+    x = np.linspace(0, 1, 300)
     y = 2 * np.exp(-((x - 0.15) ** 2) / 0.03)
     
-    ax.fill_between(x, y, alpha=0.3, color='#3498db', label='Package Population')
-    ax.plot(x, y, color='#3498db', linewidth=2)
+    # Enhanced gradient color zones
+    ax.axvspan(0, 0.33, alpha=0.15, color='#27ae60', label='🟢 Low Risk Zone')
+    ax.axvspan(0.33, 0.67, alpha=0.15, color='#f39c12', label='🟡 Medium Risk Zone')
+    ax.axvspan(0.67, 1.0, alpha=0.15, color='#e74c3c', label='🔴 High Risk Zone')
     
-    # Color zones
-    ax.axvspan(0, 0.33, alpha=0.1, color='green', label='Low Risk Zone')
-    ax.axvspan(0.33, 0.67, alpha=0.1, color='orange', label='Medium Risk Zone')
-    ax.axvspan(0.67, 1.0, alpha=0.1, color='red', label='High Risk Zone')
+    # Add zone boundary lines
+    for x_val, color, style in [(0.33, '#27ae60', '--'), (0.67, '#f39c12', '--')]:
+        ax.axvline(x_val, color=color, linewidth=2, linestyle=style, alpha=0.6)
     
-    # Mark current package
-    ax.axvline(risk_score, color='red', linewidth=3, linestyle='--', 
-              label=f'This Package ({risk_score:.2f})')
-    ax.plot(risk_score, 0, 'ro', markersize=15, markeredgecolor='darkred', markeredgewidth=2)
+    # Enhanced distribution curve with gradient fill
+    ax.fill_between(x, y, alpha=0.4, color='#3498db')
+    ax.fill_between(x, y, where=(x <= 0.33), alpha=0.3, color='#27ae60')
+    ax.fill_between(x, y, where=((x > 0.33) & (x <= 0.67)), alpha=0.3, color='#f39c12')
+    ax.fill_between(x, y, where=(x > 0.67), alpha=0.3, color='#e74c3c')
     
-    # Styling
-    ax.set_xlabel('Risk Score', fontsize=11, fontweight='bold')
-    ax.set_ylabel('Density', fontsize=11, fontweight='bold')
-    ax.set_title('Risk Score Distribution - Where Does This Package Stand?', 
-                fontsize=13, fontweight='bold')
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, max(y) * 1.1)
-    ax.legend(loc='upper right', fontsize=9)
+    ax.plot(x, y, color='#2980b9', linewidth=3, label='Package Population Distribution', alpha=0.9)
+    
+    # Enhanced marker for current package
+    marker_height = np.interp(risk_score, x, y)
+    
+    # Vertical line with gradient effect
+    ax.axvline(risk_score, color='#c0392b', linewidth=4, linestyle='--', 
+              label=f'📍 This Package', alpha=0.8, zorder=10)
+    
+    # Multiple markers for emphasis
+    ax.plot(risk_score, 0, 'v', markersize=20, markerfacecolor='#e74c3c', 
+           markeredgecolor='#c0392b', markeredgewidth=3, zorder=11)
+    ax.plot(risk_score, marker_height, 'o', markersize=18, markerfacecolor='#e74c3c', 
+           markeredgecolor='#c0392b', markeredgewidth=3, zorder=11)
+    
+    # Enhanced styling
+    ax.set_xlabel('Risk Score →', fontsize=13, fontweight='bold', color='#2c3e50')
+    ax.set_ylabel('Package Density →', fontsize=13, fontweight='bold', color='#2c3e50')
+    ax.set_title('📊 RISK SCORE DISTRIBUTION ANALYSIS\nWhere Does This Package Stand?', 
+                fontsize=15, fontweight='bold', pad=20, color='#2c3e50')
+    ax.set_xlim(-0.02, 1.02)
+    ax.set_ylim(0, max(y) * 1.15)
+    ax.legend(loc='upper right', fontsize=10, framealpha=0.95, 
+             edgecolor='#34495e', fancybox=True, shadow=True)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-    ax.grid(axis='y', alpha=0.3, linestyle='--')
+    ax.spines['left'].set_linewidth(2)
+    ax.spines['bottom'].set_linewidth(2)
+    ax.spines['left'].set_color('#7f8c8d')
+    ax.spines['bottom'].set_color('#7f8c8d')
+    ax.grid(axis='both', alpha=0.3, linestyle='--', linewidth=1)
     
-    # Add percentile text
+    # Enhanced percentile annotation
     percentile = int((1 - risk_score) * 100)
-    ax.text(risk_score, max(y) * 0.9, 
-           f'More risky than\n{percentile}% of packages',
-           ha='center', fontsize=9, fontweight='bold',
-           bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.7))
+    annotation_y = max(y) * 0.85
+    
+    if risk_score > 0.7:
+        emoji = '⚠️'
+        bg_color = '#fadbd8'
+        edge_color = '#e74c3c'
+    elif risk_score > 0.4:
+        emoji = '⚡'
+        bg_color = '#fff3cd'
+        edge_color = '#f39c12'
+    else:
+        emoji = '✅'
+        bg_color = '#d5f4e6'
+        edge_color = '#27ae60'
+    
+    ax.annotate(f'{emoji} PERCENTILE\n\nMore risky than\n{percentile}% of packages\n\nRisk Score: {risk_score:.3f}',
+               xy=(risk_score, marker_height), xytext=(risk_score + 0.15, annotation_y),
+               fontsize=11, fontweight='bold', ha='center',
+               bbox=dict(boxstyle='round,pad=0.8', facecolor=bg_color, 
+                        edgecolor=edge_color, linewidth=3, alpha=0.95),
+               arrowprops=dict(arrowstyle='->', lw=2.5, color=edge_color,
+                             connectionstyle="arc3,rad=0.3"))
     
     plt.tight_layout()
-    plt.savefig(filename, dpi=150, bbox_inches='tight', facecolor='white')
+    plt.savefig(filename, dpi=200, bbox_inches='tight', facecolor='#f8f9fa')
     plt.close()
     return filename
 
 def create_radar_chart(author_age, num_versions, name_entropy, risk_score, filename="/tmp/radar_chart.png"):
     """Creates a radar chart showing normalized feature values."""
-    fig, ax = plt.subplots(figsize=(7, 7), subplot_kw=dict(projection='polar'))
+    fig, ax = plt.subplots(figsize=(9, 9), subplot_kw=dict(projection='polar'))
+    fig.patch.set_facecolor('#f8f9fa')
     
     # Normalize features (0-1 scale, where 1 is worst)
-    # Author age: inverse (lower is worse)
-    norm_author_age = max(0, min(1, 1 - (author_age / 365)))  # 0 days = 1 (worst), 365+ = 0 (best)
-    # Versions: inverse (lower is worse)
-    norm_versions = max(0, min(1, 1 - (num_versions / 10)))  # 0 versions = 1, 10+ = 0
-    # Entropy: direct (higher is worse)
-    norm_entropy = max(0, min(1, (name_entropy - 1.0) / 4.0))  # 1.0 = 0, 5.0 = 1
+    norm_author_age = max(0, min(1, 1 - (author_age / 365)))
+    norm_versions = max(0, min(1, 1 - (num_versions / 10)))
+    norm_entropy = max(0, min(1, (name_entropy - 1.0) / 4.0))
     
-    categories = ['Author\nAge Risk', 'Version\nCount Risk', 'Name\nEntropy Risk', 'Overall\nRisk Score']
+    categories = ['👤\nAuthor Age\nRisk', '🔢\nVersion Count\nRisk', '🔤\nName Entropy\nRisk', '⚠️\nOverall Risk\nScore']
     values = [norm_author_age, norm_versions, norm_entropy, risk_score]
     
-    # Number of variables
     N = len(categories)
     angles = [n / float(N) * 2 * np.pi for n in range(N)]
-    values += values[:1]  # Complete the circle
+    values += values[:1]
     angles += angles[:1]
     
-    # Plot
-    ax.plot(angles, values, 'o-', linewidth=2, color='#e74c3c', label='This Package')
-    ax.fill(angles, values, alpha=0.25, color='#e74c3c')
+    # Enhanced grid styling
+    ax.set_facecolor('#ecf0f1')
+    ax.grid(True, linestyle='--', alpha=0.4, linewidth=1.5, color='#95a5a6')
     
-    # Safe baseline (all zeros)
+    # Add concentric circles for visual depth
+    for radius, alpha in [(0.25, 0.1), (0.5, 0.15), (0.75, 0.2), (1.0, 0.25)]:
+        circle_angles = np.linspace(0, 2*np.pi, 100)
+        circle_x = [radius] * len(circle_angles)
+        ax.plot(circle_angles, circle_x, color='#7f8c8d', linewidth=1.5, alpha=alpha)
+    
+    # Safe baseline with gradient
     safe_values = [0, 0, 0, 0, 0]
-    ax.plot(angles, safe_values, 'o-', linewidth=2, color='#2ecc71', label='Safe Package', linestyle='--')
-    ax.fill(angles, safe_values, alpha=0.1, color='#2ecc71')
+    ax.plot(angles, safe_values, 'o-', linewidth=3, color='#27ae60', 
+           label='✅ Safe Package Baseline', linestyle='--', markersize=10, alpha=0.8)
+    ax.fill(angles, safe_values, alpha=0.15, color='#2ecc71')
     
-    # Labels
+    # Medium risk reference
+    medium_values = [0.5, 0.5, 0.5, 0.5, 0.5]
+    ax.plot(angles, medium_values, 'o-', linewidth=2, color='#f39c12', 
+           label='⚡ Medium Risk', linestyle=':', markersize=6, alpha=0.6)
+    
+    # This package with enhanced styling
+    ax.plot(angles, values, 'o-', linewidth=4, color='#e74c3c', 
+           label='🎯 This Package', markersize=14, markeredgewidth=2, 
+           markeredgecolor='#c0392b', alpha=0.9, zorder=10)
+    ax.fill(angles, values, alpha=0.3, color='#e74c3c')
+    
+    # Add value annotations at each point
+    for angle, value, label in zip(angles[:-1], values[:-1], categories):
+        ax.plot([angle, angle], [0, value], color='#e74c3c', 
+               linewidth=2, alpha=0.3, zorder=1)
+        # Value label
+        ax.text(angle, value + 0.12, f'{value:.2f}', 
+               ha='center', va='center', fontsize=10, fontweight='bold',
+               color='#c0392b',
+               bbox=dict(boxstyle='circle,pad=0.3', facecolor='white', 
+                        edgecolor='#e74c3c', linewidth=2, alpha=0.9))
+    
+    # Enhanced labels
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories, fontsize=10, fontweight='bold')
-    ax.set_ylim(0, 1)
+    ax.set_xticklabels(categories, fontsize=11, fontweight='bold', color='#2c3e50')
+    ax.set_ylim(0, 1.15)
     ax.set_yticks([0.25, 0.5, 0.75, 1.0])
-    ax.set_yticklabels(['0.25', '0.5', '0.75', '1.0'], fontsize=8, color='gray')
-    ax.grid(True, linestyle='--', alpha=0.7)
+    ax.set_yticklabels(['0.25', '0.5', '0.75', '1.0'], fontsize=9, 
+                       color='#7f8c8d', fontweight='bold')
     
-    # Title and legend
-    plt.title('Multi-Dimensional Risk Profile', fontsize=14, fontweight='bold', pad=20)
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+    # Enhanced title
+    plt.title('🎯 MULTI-DIMENSIONAL RISK PROFILE\nComprehensive Security Assessment', 
+             fontsize=15, fontweight='bold', pad=30, color='#2c3e50')
+    
+    # Enhanced legend
+    ax.legend(loc='upper left', bbox_to_anchor=(1.15, 1.05), fontsize=10,
+             framealpha=0.95, edgecolor='#34495e', fancybox=True, 
+             shadow=True, borderpad=1)
     
     plt.tight_layout()
-    plt.savefig(filename, dpi=150, bbox_inches='tight', facecolor='white')
+    plt.savefig(filename, dpi=200, bbox_inches='tight', facecolor='#f8f9fa')
     plt.close()
     return filename
 
@@ -360,49 +538,74 @@ def generate_audit_report(package_name: str, risk_score: float, author_age: int,
         
         # === TITLE PAGE ===
         pdf.add_page()
-        pdf.set_fill_color(52, 73, 94)  # Dark blue
-        pdf.rect(0, 0, 210, 60, 'F')
+        
+        # Gradient-like header with multiple rectangles
+        colors = [(41, 128, 185), (52, 152, 219), (41, 128, 185), (52, 73, 94)]
+        for i, color in enumerate(colors):
+            pdf.set_fill_color(*color)
+            pdf.rect(0, i*15, 210, 15, 'F')
         
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font("helvetica", style="B", size=28)
-        pdf.cell(0, 40, "", new_x="LMARGIN", new_y="NEXT")  # Spacer
-        pdf.cell(0, 10, "SupplyGuard Forensics", new_x="LMARGIN", new_y="NEXT", align="C")
+        pdf.set_font("helvetica", style="B", size=32)
+        pdf.cell(0, 35, "", new_x="LMARGIN", new_y="NEXT")  # Spacer
+        pdf.cell(0, 12, "SupplyGuard Forensics", new_x="LMARGIN", new_y="NEXT", align="C")
         
-        pdf.set_font("helvetica", size=14)
-        pdf.cell(0, 8, "Package Security Audit Report", new_x="LMARGIN", new_y="NEXT", align="C")
+        pdf.set_font("helvetica", style="I", size=16)
+        pdf.cell(0, 8, "AI-Powered Package Security Analysis", new_x="LMARGIN", new_y="NEXT", align="C")
         
         pdf.set_text_color(0, 0, 0)
         pdf.ln(30)
         
-        # Package Info Box
+        # Enhanced Package Info Box with border
+        pdf.set_line_width(1.5)
+        pdf.set_draw_color(52, 152, 219)
         pdf.set_fill_color(236, 240, 241)
-        pdf.set_font("helvetica", style="B", size=14)
-        pdf.cell(0, 10, "Package Under Investigation", new_x="LMARGIN", new_y="NEXT", 
-                fill=True, align="C")
+        pdf.rect(15, pdf.get_y(), 180, 35, 'DF')
         
-        pdf.set_font("helvetica", size=20)
-        pdf.set_text_color(231, 76, 60) if risk_score > 0.7 else pdf.set_text_color(46, 204, 113)
-        pdf.cell(0, 15, package_name, new_x="LMARGIN", new_y="NEXT", align="C")
+        pdf.ln(5)
+        pdf.set_font("helvetica", style="B", size=15)
+        pdf.set_text_color(52, 73, 94)
+        pdf.cell(0, 8, "PACKAGE UNDER INVESTIGATION", new_x="LMARGIN", new_y="NEXT", align="C")
+        
+        pdf.set_font("helvetica", style="B", size=24)
+        if risk_score > 0.7:
+            pdf.set_text_color(231, 76, 60)
+        elif risk_score > 0.4:
+            pdf.set_text_color(243, 156, 18)
+        else:
+            pdf.set_text_color(46, 204, 113)
+        pdf.cell(0, 12, package_name, new_x="LMARGIN", new_y="NEXT", align="C")
         pdf.set_text_color(0, 0, 0)
         
         pdf.ln(20)
         
-        # Key Metrics
-        pdf.set_font("helvetica", style="B", size=12)
-        pdf.cell(0, 8, "Key Metrics at a Glance:", new_x="LMARGIN", new_y="NEXT")
-        pdf.set_font("helvetica", size=11)
+        # Enhanced Key Metrics with colored boxes
+        pdf.ln(8)
+        pdf.set_fill_color(52, 152, 219)
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font("helvetica", style="B", size=13)
+        pdf.cell(0, 10, "KEY METRICS AT A GLANCE", new_x="LMARGIN", new_y="NEXT", 
+                fill=True, align="C")
+        pdf.set_text_color(0, 0, 0)
+        
+        pdf.ln(5)
         
         metrics = [
-            f"Risk Score: {risk_score:.3f}",
-            f"Author Account Age: {author_age} days",
-            f"Total Versions Released: {num_versions}",
-            f"Name Entropy: {name_entropy:.2f} bits",
-            f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}"
+            ("Risk Score", f"{risk_score:.3f}", (231, 76, 60) if risk_score > 0.7 else (46, 204, 113)),
+            ("Author Account Age", f"{author_age} days", (52, 73, 94)),
+            ("Total Versions Released", f"{num_versions}", (52, 73, 94)),
+            ("Name Entropy", f"{name_entropy:.2f} bits", (52, 73, 94)),
+            ("Report Generated", datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'), (52, 73, 94))
         ]
         
-        for metric in metrics:
-            pdf.cell(10, 7, "", new_x="RIGHT")  # Indent
-            pdf.cell(0, 7, f"- {metric}", new_x="LMARGIN", new_y="NEXT")
+        for label, value, color in metrics:
+            # Create two-column layout with colored value
+            pdf.set_font("helvetica", style="B", size=11)
+            pdf.cell(90, 7, f"  {label}:", new_x="RIGHT")
+            pdf.set_font("helvetica", size=11)
+            pdf.set_text_color(*color)
+            pdf.cell(0, 7, value, new_x="LMARGIN", new_y="NEXT")
+            pdf.set_text_color(0, 0, 0)
         
         pdf.ln(10)
         
@@ -425,11 +628,15 @@ def generate_audit_report(package_name: str, risk_score: float, author_age: int,
             verdict_color = (46, 204, 113)
             recommendation = "PASS - Package appears to follow normal patterns."
         
+        # Enhanced verdict box with border
+        pdf.set_line_width(2)
+        pdf.set_draw_color(*verdict_color)
         pdf.set_fill_color(*verdict_color)
+        pdf.rect(20, pdf.get_y(), 170, 15, 'DF')
+        
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font("helvetica", style="B", size=11)
-        pdf.cell(0, 10, f"VERDICT: {verdict}", new_x="LMARGIN", new_y="NEXT", 
-                fill=True, align="C")
+        pdf.set_font("helvetica", style="B", size=13)
+        pdf.cell(0, 15, f"VERDICT: {verdict}", new_x="LMARGIN", new_y="NEXT", align="C")
         
         pdf.set_text_color(0, 0, 0)
         pdf.set_font("helvetica", size=10)
