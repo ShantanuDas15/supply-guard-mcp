@@ -539,140 +539,273 @@ def generate_audit_report(package_name: str, risk_score: float, author_age: int,
         # === TITLE PAGE ===
         pdf.add_page()
         
-        # Gradient-like header with multiple rectangles
-        colors = [(41, 128, 185), (52, 152, 219), (41, 128, 185), (52, 73, 94)]
-        for i, color in enumerate(colors):
+        # Enhanced gradient header with smooth color transition
+        header_colors = [
+            (26, 188, 156), (22, 160, 133), (41, 128, 185), 
+            (52, 152, 219), (41, 128, 185), (52, 73, 94)
+        ]
+        for i, color in enumerate(header_colors):
             pdf.set_fill_color(*color)
-            pdf.rect(0, i*15, 210, 15, 'F')
+            pdf.rect(0, i*10, 210, 10, 'F')
         
+        # Main title with shadow effect
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font("helvetica", style="B", size=32)
+        pdf.set_font("helvetica", style="B", size=36)
         pdf.cell(0, 35, "", new_x="LMARGIN", new_y="NEXT")  # Spacer
-        pdf.cell(0, 12, "SupplyGuard Forensics", new_x="LMARGIN", new_y="NEXT", align="C")
+        pdf.cell(0, 15, "SupplyGuard Forensics", new_x="LMARGIN", new_y="NEXT", align="C")
         
-        pdf.set_font("helvetica", style="I", size=16)
+        pdf.set_font("helvetica", style="BI", size=14)
+        pdf.set_text_color(236, 240, 241)
         pdf.cell(0, 8, "AI-Powered Package Security Analysis", new_x="LMARGIN", new_y="NEXT", align="C")
         
-        pdf.set_text_color(0, 0, 0)
-        pdf.ln(30)
-        
-        # Enhanced Package Info Box with border
-        pdf.set_line_width(1.5)
+        # Decorative line
         pdf.set_draw_color(52, 152, 219)
-        pdf.set_fill_color(236, 240, 241)
-        pdf.rect(15, pdf.get_y(), 180, 35, 'DF')
+        pdf.set_line_width(0.5)
+        pdf.line(70, pdf.get_y() + 5, 140, pdf.get_y() + 5)
         
-        pdf.ln(5)
-        pdf.set_font("helvetica", style="B", size=15)
-        pdf.set_text_color(52, 73, 94)
-        pdf.cell(0, 8, "PACKAGE UNDER INVESTIGATION", new_x="LMARGIN", new_y="NEXT", align="C")
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(25)
         
-        pdf.set_font("helvetica", style="B", size=24)
+        # Enhanced Package Info Box with shadow and rounded effect
+        box_y = pdf.get_y()
+        
+        # Shadow effect
+        pdf.set_fill_color(189, 195, 199)
+        pdf.rect(17, box_y + 2, 176, 40, 'F')
+        
+        # Main box with gradient-like double border
+        pdf.set_line_width(3)
+        pdf.set_draw_color(52, 152, 219)
+        pdf.set_fill_color(255, 255, 255)
+        pdf.rect(15, box_y, 180, 40, 'DF')
+        
+        pdf.set_line_width(1)
+        pdf.set_draw_color(41, 128, 185)
+        pdf.rect(18, box_y + 3, 174, 34, 'D')
+        
+        # Header label with icon
+        pdf.set_y(box_y + 6)
+        pdf.set_font("helvetica", style="B", size=11)
+        pdf.set_text_color(127, 140, 141)
+        pdf.cell(0, 6, "TARGET PACKAGE", new_x="LMARGIN", new_y="NEXT", align="C")
+        
+        # Package name with dynamic color
+        pdf.set_font("helvetica", style="B", size=26)
         if risk_score > 0.7:
             pdf.set_text_color(231, 76, 60)
         elif risk_score > 0.4:
             pdf.set_text_color(243, 156, 18)
         else:
             pdf.set_text_color(46, 204, 113)
-        pdf.cell(0, 12, package_name, new_x="LMARGIN", new_y="NEXT", align="C")
+        pdf.cell(0, 14, package_name, new_x="LMARGIN", new_y="NEXT", align="C")
         pdf.set_text_color(0, 0, 0)
         
-        pdf.ln(20)
+        pdf.ln(15)
         
-        # Enhanced Key Metrics with colored boxes
-        pdf.ln(8)
-        pdf.set_fill_color(52, 152, 219)
+        # Enhanced Key Metrics Section with modern card design
+        pdf.set_fill_color(41, 128, 185)
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font("helvetica", style="B", size=13)
-        pdf.cell(0, 10, "KEY METRICS AT A GLANCE", new_x="LMARGIN", new_y="NEXT", 
+        pdf.set_font("helvetica", style="B", size=14)
+        pdf.cell(0, 12, "KEY METRICS OVERVIEW", new_x="LMARGIN", new_y="NEXT", 
                 fill=True, align="C")
         pdf.set_text_color(0, 0, 0)
         
-        pdf.ln(5)
+        pdf.ln(8)
         
-        metrics = [
-            ("Risk Score", f"{risk_score:.3f}", (231, 76, 60) if risk_score > 0.7 else (46, 204, 113)),
-            ("Author Account Age", f"{author_age} days", (52, 73, 94)),
-            ("Total Versions Released", f"{num_versions}", (52, 73, 94)),
-            ("Name Entropy", f"{name_entropy:.2f} bits", (52, 73, 94)),
-            ("Report Generated", datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC'), (52, 73, 94))
+        # Metric cards in a grid layout
+        metrics_data = [
+            ("RISK SCORE", f"{risk_score:.3f}", (231, 76, 60) if risk_score > 0.7 else (46, 204, 113), "\U0001F6A8"),
+            ("AUTHOR AGE", f"{author_age} days", (52, 152, 219), "\U0001F464"),
+            ("VERSIONS", f"{num_versions}", (155, 89, 182), "\U0001F4E6"),
+            ("ENTROPY", f"{name_entropy:.2f} bits", (230, 126, 34), "\U0001F522")
         ]
         
-        for label, value, color in metrics:
-            # Create two-column layout with colored value
-            pdf.set_font("helvetica", style="B", size=11)
-            pdf.cell(90, 7, f"  {label}:", new_x="RIGHT")
-            pdf.set_font("helvetica", size=11)
+        start_x = 20
+        card_width = 42
+        card_height = 28
+        spacing = 4
+        current_y = pdf.get_y()
+        
+        for i, (label, value, color, icon) in enumerate(metrics_data):
+            x_pos = start_x + (i * (card_width + spacing))
+            
+            # Card shadow
+            pdf.set_fill_color(220, 220, 220)
+            pdf.rect(x_pos + 1, current_y + 1, card_width, card_height, 'F')
+            
+            # Card background
+            pdf.set_fill_color(255, 255, 255)
+            pdf.set_draw_color(*color)
+            pdf.set_line_width(2)
+            pdf.rect(x_pos, current_y, card_width, card_height, 'DF')
+            
+            # Label
+            pdf.set_xy(x_pos + 2, current_y + 4)
+            pdf.set_font("helvetica", style="B", size=8)
+            pdf.set_text_color(127, 140, 141)
+            pdf.cell(card_width - 4, 5, label, align="C")
+            
+            # Value
+            pdf.set_xy(x_pos + 2, current_y + 11)
+            pdf.set_font("helvetica", style="B", size=13)
             pdf.set_text_color(*color)
-            pdf.cell(0, 7, value, new_x="LMARGIN", new_y="NEXT")
-            pdf.set_text_color(0, 0, 0)
+            pdf.cell(card_width - 4, 8, value, align="C")
+        
+        pdf.set_y(current_y + card_height + 8)
+        
+        # Report timestamp in a subtle box
+        pdf.set_font("helvetica", style="I", size=9)
+        pdf.set_text_color(127, 140, 141)
+        pdf.cell(0, 6, f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}", 
+                align="C", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_text_color(0, 0, 0)
         
         pdf.ln(10)
         
-        # Executive Summary
-        pdf.set_font("helvetica", style="B", size=12)
-        pdf.cell(0, 8, "Executive Summary:", new_x="LMARGIN", new_y="NEXT")
-        pdf.set_font("helvetica", size=10)
+        # Executive Summary Section with enhanced design
+        pdf.ln(5)
+        pdf.set_fill_color(236, 240, 241)
+        pdf.set_font("helvetica", style="B", size=13)
+        pdf.set_text_color(52, 73, 94)
+        pdf.cell(0, 10, "EXECUTIVE SUMMARY", new_x="LMARGIN", new_y="NEXT", 
+                fill=True, align="C")
+        pdf.set_text_color(0, 0, 0)
         
-        # Determine verdict
+        pdf.ln(6)
+        
+        # Determine verdict with icons
         if risk_score > 0.7:
             verdict = "HIGH RISK - POTENTIAL MALWARE DETECTED"
+            verdict_icon = "\u26A0\uFE0F"
             verdict_color = (231, 76, 60)
+            verdict_bg = (253, 235, 235)
             recommendation = "BLOCK - Do not install or use this package. Immediate investigation required."
         elif risk_score > 0.4:
             verdict = "MEDIUM RISK - SUSPICIOUS PATTERNS DETECTED"
+            verdict_icon = "\u26A1"
             verdict_color = (243, 156, 18)
+            verdict_bg = (255, 243, 205)
             recommendation = "CAUTION - Manual review recommended before deployment."
         else:
             verdict = "LOW RISK - APPEARS SAFE"
+            verdict_icon = "\u2705"
             verdict_color = (46, 204, 113)
+            verdict_bg = (213, 245, 227)
             recommendation = "PASS - Package appears to follow normal patterns."
         
-        # Enhanced verdict box with border
-        pdf.set_line_width(2)
-        pdf.set_draw_color(*verdict_color)
-        pdf.set_fill_color(*verdict_color)
-        pdf.rect(20, pdf.get_y(), 170, 15, 'DF')
+        # Enhanced verdict box with shadow and icon
+        verdict_y = pdf.get_y()
         
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_font("helvetica", style="B", size=13)
-        pdf.cell(0, 15, f"VERDICT: {verdict}", new_x="LMARGIN", new_y="NEXT", align="C")
+        # Shadow
+        pdf.set_fill_color(200, 200, 200)
+        pdf.rect(17, verdict_y + 2, 176, 22, 'F')
+        
+        # Background with gradient effect
+        pdf.set_fill_color(*verdict_bg)
+        pdf.rect(15, verdict_y, 180, 22, 'F')
+        
+        # Border
+        pdf.set_line_width(3)
+        pdf.set_draw_color(*verdict_color)
+        pdf.rect(15, verdict_y, 180, 22, 'D')
+        
+        # Verdict text with icon
+        pdf.set_y(verdict_y + 6)
+        pdf.set_text_color(*verdict_color)
+        pdf.set_font("helvetica", style="B", size=14)
+        pdf.cell(0, 10, f"{verdict_icon} VERDICT: {verdict}", new_x="LMARGIN", new_y="NEXT", align="C")
         
         pdf.set_text_color(0, 0, 0)
+        pdf.ln(8)
+        
+        # Recommendation box
+        pdf.set_font("helvetica", style="B", size=10)
+        pdf.set_text_color(52, 73, 94)
+        pdf.cell(40, 6, "Recommendation:", new_x="RIGHT")
         pdf.set_font("helvetica", size=10)
-        pdf.ln(5)
-        pdf.multi_cell(0, 6, f"Recommendation: {recommendation}")
+        pdf.set_text_color(0, 0, 0)
+        pdf.multi_cell(0, 6, recommendation)
+        
         pdf.ln(3)
         
+        # Analysis box with icon
+        pdf.set_font("helvetica", style="B", size=10)
+        pdf.set_text_color(52, 73, 94)
+        pdf.cell(40, 6, "Risk Factors:", new_x="RIGHT")
+        pdf.set_font("helvetica", size=10)
+        pdf.set_text_color(0, 0, 0)
         safe_expl = explanation.encode('latin-1', 'replace').decode('latin-1')
-        pdf.multi_cell(0, 6, f"Analysis: {safe_expl}")
+        pdf.multi_cell(0, 6, safe_expl)
         
         # === PAGE 2: RISK VISUALIZATIONS ===
         pdf.add_page()
-        pdf.set_font("helvetica", style="B", size=16)
-        pdf.set_fill_color(52, 152, 219)
-        pdf.set_text_color(255, 255, 255)
-        pdf.cell(0, 12, "Section 1: Risk Assessment", new_x="LMARGIN", new_y="NEXT", 
-                fill=True, align="C")
-        pdf.set_text_color(0, 0, 0)
-        pdf.ln(5)
         
-        # Risk Gauge
+        # Enhanced section header with gradient
+        header_y = 10
+        pdf.set_fill_color(52, 152, 219)
+        pdf.rect(0, header_y, 210, 10, 'F')
+        pdf.set_fill_color(41, 128, 185)
+        pdf.rect(0, header_y + 10, 210, 5, 'F')
+        
+        pdf.set_y(header_y + 2)
+        pdf.set_font("helvetica", style="B", size=18)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(0, 11, "SECTION 1: RISK ASSESSMENT ANALYSIS", new_x="LMARGIN", new_y="NEXT", align="C")
+        pdf.set_text_color(0, 0, 0)
+        
+        pdf.ln(10)
+        
+        # Risk Gauge with enhanced framing
         if risk_gauge_file:
             pdf.image(risk_gauge_file, x=20, w=170)
-            pdf.ln(5)
+            pdf.ln(8)
         
-        pdf.set_font("helvetica", style="B", size=11)
-        pdf.cell(0, 7, "Risk Score Interpretation:", new_x="LMARGIN", new_y="NEXT")
-        pdf.set_font("helvetica", size=9)
+        # Interpretation guide with visual cards
+        pdf.set_font("helvetica", style="B", size=12)
+        pdf.set_text_color(52, 73, 94)
+        pdf.cell(0, 8, "RISK SCORE INTERPRETATION GUIDE", new_x="LMARGIN", new_y="NEXT", align="C")
+        pdf.set_text_color(0, 0, 0)
+        
+        pdf.ln(5)
+        
+        # Visual interpretation boxes
         interpretations = [
-            "0.00 - 0.33: LOW RISK - Package exhibits normal, safe characteristics",
-            "0.34 - 0.66: MEDIUM RISK - Some suspicious patterns detected",
-            "0.67 - 1.00: HIGH RISK - Strong indicators of malicious intent"
+            ("0.00 - 0.33", "LOW RISK", "Package exhibits normal, safe characteristics", (46, 204, 113)),
+            ("0.34 - 0.66", "MEDIUM RISK", "Some suspicious patterns detected", (243, 156, 18)),
+            ("0.67 - 1.00", "HIGH RISK", "Strong indicators of malicious intent", (231, 76, 60))
         ]
-        for interp in interpretations:
-            pdf.cell(10, 6, "", new_x="RIGHT")
-            pdf.cell(0, 6, interp, new_x="LMARGIN", new_y="NEXT")
+        
+        for range_text, level, desc, color in interpretations:
+            box_y = pdf.get_y()
+            
+            # Color indicator bar
+            pdf.set_fill_color(*color)
+            pdf.rect(20, box_y, 5, 12, 'F')
+            
+            # Content box
+            pdf.set_fill_color(249, 249, 249)
+            pdf.rect(25, box_y, 165, 12, 'F')
+            pdf.set_draw_color(220, 220, 220)
+            pdf.set_line_width(0.5)
+            pdf.rect(25, box_y, 165, 12, 'D')
+            
+            # Range label
+            pdf.set_xy(28, box_y + 2)
+            pdf.set_font("helvetica", style="B", size=10)
+            pdf.set_text_color(*color)
+            pdf.cell(25, 8, range_text)
+            
+            # Level label
+            pdf.set_font("helvetica", style="B", size=10)
+            pdf.cell(30, 8, level)
+            
+            # Description
+            pdf.set_font("helvetica", size=9)
+            pdf.set_text_color(80, 80, 80)
+            pdf.cell(0, 8, desc)
+            
+            pdf.set_text_color(0, 0, 0)
+            pdf.ln(14)
         
         # === PAGE 3: FEATURE ANALYSIS ===
         pdf.add_page()
