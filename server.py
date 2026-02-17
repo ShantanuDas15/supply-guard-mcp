@@ -137,7 +137,7 @@ def create_risk_gauge(risk_score, filename="/tmp/risk_gauge.png"):
     ax.set_ylim(-0.4, 1.3)
     ax.axis('off')
     
-    plt.title('📊 PACKAGE RISK ASSESSMENT GAUGE', fontsize=18, fontweight='bold', 
+    plt.title('PACKAGE RISK ASSESSMENT GAUGE', fontsize=18, fontweight='bold', 
              pad=25, color='#2c3e50', family='sans-serif')
     plt.tight_layout()
     plt.savefig(filename, dpi=200, bbox_inches='tight', facecolor='#f8f9fa')
@@ -151,28 +151,25 @@ def create_feature_analysis(author_age, num_versions, name_entropy, filename="/t
     
     features = [
         {
-            'name': '👤 Author Age',
+            'name': 'Author Age',
             'value': author_age,
             'safe_threshold': 30,
             'unit': 'days',
-            'higher_is_better': True,
-            'icon': '📅'
+            'higher_is_better': True
         },
         {
-            'name': '🔢 Version Count',
+            'name': 'Version Count',
             'value': num_versions,
             'safe_threshold': 3,
             'unit': 'versions',
-            'higher_is_better': True,
-            'icon': '📦'
+            'higher_is_better': True
         },
         {
-            'name': '🔤 Name Entropy',
+            'name': 'Name Entropy',
             'value': name_entropy,
             'safe_threshold': 3.0,
             'unit': 'bits',
-            'higher_is_better': False,
-            'icon': '🎲'
+            'higher_is_better': False
         }
     ]
     
@@ -223,11 +220,11 @@ def create_feature_analysis(author_age, num_versions, name_entropy, filename="/t
         
         # Enhanced status badge
         if is_safe:
-            badge_text = '✓ SAFE'
+            badge_text = '[OK] SAFE'
             badge_color = '#27ae60'
             badge_bg = '#d5f4e6'
         else:
-            badge_text = '✗ RISK'
+            badge_text = '[!] RISK'
             badge_color = '#e74c3c'
             badge_bg = '#fadbd8'
         
@@ -236,7 +233,7 @@ def create_feature_analysis(author_age, num_versions, name_entropy, filename="/t
                bbox=dict(boxstyle='round,pad=0.6', facecolor=badge_bg, 
                         edgecolor=badge_color, linewidth=2.5, alpha=0.95))
     
-    plt.suptitle('🔍 FEATURE SAFETY ANALYSIS', fontsize=16, fontweight='bold', 
+    plt.suptitle('FEATURE SAFETY ANALYSIS', fontsize=16, fontweight='bold', 
                 y=0.98, color='#2c3e50')
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.savefig(filename, dpi=200, bbox_inches='tight', facecolor='#f8f9fa')
@@ -250,7 +247,7 @@ def create_model_insights(model, filename="/tmp/model_insights.png"):
     
     try:
         importances = model.feature_importances_
-        feature_names = ['👤 Author Age', '🔢 Version Count', '🔤 Name Entropy']
+        feature_names = ['Author Age', 'Version Count', 'Name Entropy']
         
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
         fig.patch.set_facecolor('#f8f9fa')
@@ -271,7 +268,7 @@ def create_model_insights(model, filename="/tmp/model_insights.png"):
         
         ax1.set_xlabel('Features →', fontsize=12, fontweight='bold', color='#2c3e50')
         ax1.set_ylabel('Importance Score →', fontsize=12, fontweight='bold', color='#2c3e50')
-        ax1.set_title('🎯 Feature Importance in Risk Prediction', fontsize=14, fontweight='bold', 
+        ax1.set_title('Feature Importance in Risk Prediction', fontsize=14, fontweight='bold', 
                      pad=15, color='#2c3e50')
         ax1.set_xticks(range(len(importances)))
         ax1.set_xticklabels([feature_names[i] for i in indices], rotation=0, 
@@ -312,7 +309,7 @@ def create_model_insights(model, filename="/tmp/model_insights.png"):
             autotext.set_fontsize(12)
             autotext.set_fontweight('bold')
         
-        ax2.set_title('📊 Feature Contribution Distribution', fontsize=14, fontweight='bold', 
+        ax2.set_title('Feature Contribution Distribution', fontsize=14, fontweight='bold', 
                      pad=15, color='#2c3e50')
         
         plt.tight_layout()
@@ -334,9 +331,9 @@ def create_risk_distribution(risk_score, filename="/tmp/risk_distribution.png"):
     y = 2 * np.exp(-((x - 0.15) ** 2) / 0.03)
     
     # Enhanced gradient color zones
-    ax.axvspan(0, 0.33, alpha=0.15, color='#27ae60', label='🟢 Low Risk Zone')
-    ax.axvspan(0.33, 0.67, alpha=0.15, color='#f39c12', label='🟡 Medium Risk Zone')
-    ax.axvspan(0.67, 1.0, alpha=0.15, color='#e74c3c', label='🔴 High Risk Zone')
+    ax.axvspan(0, 0.33, alpha=0.15, color='#27ae60', label='[LOW] Low Risk Zone')
+    ax.axvspan(0.33, 0.67, alpha=0.15, color='#f39c12', label='[MED] Medium Risk Zone')
+    ax.axvspan(0.67, 1.0, alpha=0.15, color='#e74c3c', label='[HIGH] High Risk Zone')
     
     # Add zone boundary lines
     for x_val, color, style in [(0.33, '#27ae60', '--'), (0.67, '#f39c12', '--')]:
@@ -355,7 +352,7 @@ def create_risk_distribution(risk_score, filename="/tmp/risk_distribution.png"):
     
     # Vertical line with gradient effect
     ax.axvline(risk_score, color='#c0392b', linewidth=4, linestyle='--', 
-              label=f'📍 This Package', alpha=0.8, zorder=10)
+              label='This Package', alpha=0.8, zorder=10)
     
     # Multiple markers for emphasis
     ax.plot(risk_score, 0, 'v', markersize=20, markerfacecolor='#e74c3c', 
@@ -366,7 +363,7 @@ def create_risk_distribution(risk_score, filename="/tmp/risk_distribution.png"):
     # Enhanced styling
     ax.set_xlabel('Risk Score →', fontsize=13, fontweight='bold', color='#2c3e50')
     ax.set_ylabel('Package Density →', fontsize=13, fontweight='bold', color='#2c3e50')
-    ax.set_title('📊 RISK SCORE DISTRIBUTION ANALYSIS\nWhere Does This Package Stand?', 
+    ax.set_title('RISK SCORE DISTRIBUTION ANALYSIS\nWhere Does This Package Stand?', 
                 fontsize=15, fontweight='bold', pad=20, color='#2c3e50')
     ax.set_xlim(-0.02, 1.02)
     ax.set_ylim(0, max(y) * 1.15)
@@ -385,15 +382,15 @@ def create_risk_distribution(risk_score, filename="/tmp/risk_distribution.png"):
     annotation_y = max(y) * 0.85
     
     if risk_score > 0.7:
-        emoji = '⚠️'
+        emoji = '[!]'
         bg_color = '#fadbd8'
         edge_color = '#e74c3c'
     elif risk_score > 0.4:
-        emoji = '⚡'
+        emoji = '[!]'
         bg_color = '#fff3cd'
         edge_color = '#f39c12'
     else:
-        emoji = '✅'
+        emoji = '[OK]'
         bg_color = '#d5f4e6'
         edge_color = '#27ae60'
     
@@ -420,7 +417,7 @@ def create_radar_chart(author_age, num_versions, name_entropy, risk_score, filen
     norm_versions = max(0, min(1, 1 - (num_versions / 10)))
     norm_entropy = max(0, min(1, (name_entropy - 1.0) / 4.0))
     
-    categories = ['👤\nAuthor Age\nRisk', '🔢\nVersion Count\nRisk', '🔤\nName Entropy\nRisk', '⚠️\nOverall Risk\nScore']
+    categories = ['Author\nAge Risk', 'Version\nCount Risk', 'Name\nEntropy Risk', 'Overall\nRisk Score']
     values = [norm_author_age, norm_versions, norm_entropy, risk_score]
     
     N = len(categories)
@@ -441,17 +438,17 @@ def create_radar_chart(author_age, num_versions, name_entropy, risk_score, filen
     # Safe baseline with gradient
     safe_values = [0, 0, 0, 0, 0]
     ax.plot(angles, safe_values, 'o-', linewidth=3, color='#27ae60', 
-           label='✅ Safe Package Baseline', linestyle='--', markersize=10, alpha=0.8)
+           label='Safe Package Baseline', linestyle='--', markersize=10, alpha=0.8)
     ax.fill(angles, safe_values, alpha=0.15, color='#2ecc71')
     
     # Medium risk reference
     medium_values = [0.5, 0.5, 0.5, 0.5, 0.5]
     ax.plot(angles, medium_values, 'o-', linewidth=2, color='#f39c12', 
-           label='⚡ Medium Risk', linestyle=':', markersize=6, alpha=0.6)
+           label='Medium Risk', linestyle=':', markersize=6, alpha=0.6)
     
     # This package with enhanced styling
     ax.plot(angles, values, 'o-', linewidth=4, color='#e74c3c', 
-           label='🎯 This Package', markersize=14, markeredgewidth=2, 
+           label='This Package', markersize=14, markeredgewidth=2, 
            markeredgecolor='#c0392b', alpha=0.9, zorder=10)
     ax.fill(angles, values, alpha=0.3, color='#e74c3c')
     
@@ -475,7 +472,7 @@ def create_radar_chart(author_age, num_versions, name_entropy, risk_score, filen
                        color='#7f8c8d', fontweight='bold')
     
     # Enhanced title
-    plt.title('🎯 MULTI-DIMENSIONAL RISK PROFILE\nComprehensive Security Assessment', 
+    plt.title('MULTI-DIMENSIONAL RISK PROFILE\nComprehensive Security Assessment', 
              fontsize=15, fontweight='bold', pad=30, color='#2c3e50')
     
     # Enhanced legend
@@ -614,10 +611,10 @@ def generate_audit_report(package_name: str, risk_score: float, author_age: int,
         
         # Metric cards in a grid layout
         metrics_data = [
-            ("RISK SCORE", f"{risk_score:.3f}", (231, 76, 60) if risk_score > 0.7 else (46, 204, 113), "\U0001F6A8"),
-            ("AUTHOR AGE", f"{author_age} days", (52, 152, 219), "\U0001F464"),
-            ("VERSIONS", f"{num_versions}", (155, 89, 182), "\U0001F4E6"),
-            ("ENTROPY", f"{name_entropy:.2f} bits", (230, 126, 34), "\U0001F522")
+            ("RISK SCORE", f"{risk_score:.3f}", (231, 76, 60) if risk_score > 0.7 else (46, 204, 113)),
+            ("AUTHOR AGE", f"{author_age} days", (52, 152, 219)),
+            ("VERSIONS", f"{num_versions}", (155, 89, 182)),
+            ("ENTROPY", f"{name_entropy:.2f} bits", (230, 126, 34))
         ]
         
         start_x = 20
@@ -626,7 +623,7 @@ def generate_audit_report(package_name: str, risk_score: float, author_age: int,
         spacing = 4
         current_y = pdf.get_y()
         
-        for i, (label, value, color, icon) in enumerate(metrics_data):
+        for i, (label, value, color) in enumerate(metrics_data):
             x_pos = start_x + (i * (card_width + spacing))
             
             # Card shadow
@@ -673,22 +670,22 @@ def generate_audit_report(package_name: str, risk_score: float, author_age: int,
         
         pdf.ln(6)
         
-        # Determine verdict with icons
+        # Determine verdict with clear labels
         if risk_score > 0.7:
             verdict = "HIGH RISK - POTENTIAL MALWARE DETECTED"
-            verdict_icon = "\u26A0\uFE0F"
+            verdict_icon = "[!]"
             verdict_color = (231, 76, 60)
             verdict_bg = (253, 235, 235)
             recommendation = "BLOCK - Do not install or use this package. Immediate investigation required."
         elif risk_score > 0.4:
             verdict = "MEDIUM RISK - SUSPICIOUS PATTERNS DETECTED"
-            verdict_icon = "\u26A1"
+            verdict_icon = "[!]"
             verdict_color = (243, 156, 18)
             verdict_bg = (255, 243, 205)
             recommendation = "CAUTION - Manual review recommended before deployment."
         else:
             verdict = "LOW RISK - APPEARS SAFE"
-            verdict_icon = "\u2705"
+            verdict_icon = "[OK]"
             verdict_color = (46, 204, 113)
             verdict_bg = (213, 245, 227)
             recommendation = "PASS - Package appears to follow normal patterns."
@@ -709,7 +706,7 @@ def generate_audit_report(package_name: str, risk_score: float, author_age: int,
         pdf.set_draw_color(*verdict_color)
         pdf.rect(15, verdict_y, 180, 22, 'D')
         
-        # Verdict text with icon
+        # Verdict text with marker
         pdf.set_y(verdict_y + 6)
         pdf.set_text_color(*verdict_color)
         pdf.set_font("helvetica", style="B", size=14)
